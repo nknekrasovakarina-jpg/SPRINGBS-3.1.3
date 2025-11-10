@@ -1,0 +1,63 @@
+/* ---------- Быстрое создание ---------- */
+.quick-create {
+    background-color: #d3d3d3; /* матово-серый */
+    color: #000000; /* черные буквы */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* ---------- Имя пользователя и Email ---------- */
+.user-info label {
+    color: #50C878; /* изумрудный */
+    font-weight: bold;
+}
+.user-info input {
+    border: 1px solid #50C878;
+    color: #50C878;
+}
+
+/* ---------- Кнопки с градиентом (оставляем существующие) ---------- */
+.btn-gradient {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+}
+.btn-gradient:hover {
+    background: linear-gradient(45deg, #5a67d8, #6b46c1);
+    color: white;
+}
+
+/* ---------- Авторизация ---------- */
+.login-container {
+    max-width: 500px; /* шире */
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #f8f9fa; /* светлый фон */
+    border: 1px solid #ced4da;
+    border-radius: 8px; /* почти прямоугольная форма */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.login-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333333;
+}
+
+.login-container .form-control {
+    border-radius: 4px; /* почти прямоугольные поля */
+}
+
+/* ---------- Аватар пользователя ---------- */
+.user-avatar {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-size: 2.5rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
