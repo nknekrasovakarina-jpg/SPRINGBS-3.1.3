@@ -1,148 +1,220 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Управление пользователями</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        /* Матово-серый блок "Быстрое создание" */
-        .card-header h5 i.bi-lightning {
-            color: #444;
-        }
-        .card-header {
-            background-color: #e0e0e0;
-            color: #000;
-        }
-        /* Изумрудно-зелёные поля */
-        .card-body input[type="text"],
-        .card-body input[type="email"],
-        .card-body input[type="password"] {
-            border: 1px solid #2e8b57;
-            color: #0a0a0a;
-        }
-        .card-body input:focus {
-            border-color: #50c878;
-            box-shadow: 0 0 5px rgba(46,139,87,0.4);
-        }
-        .btn-gradient {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            color: white;
-        }
-        .btn-gradient:hover {
-            background: linear-gradient(45deg, #5a67d8, #6b46c1);
-            color: white;
-        }
-    </style>
-    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-<div class="container-fluid mt-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-people"></i> Управление пользователями</h1>
-        <a th:href="@{/admin/create}" class="btn btn-gradient">
-            <i class="bi bi-person-plus"></i> Создать пользователя
-        </a>
-    </div>
 
-    <!-- Messages -->
-    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
-        <i class="bi bi-check-circle"></i>
-        <span th:text="${successMessage}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
-        <i class="bi bi-exclamation-circle"></i>
-        <span th:text="${errorMessage}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-
-    <!-- Quick Create Form -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-lightning"></i> Быстрое создание</h5>
-        </div>
-        <div class="card-body">
-            <form th:action="@{/admin/quick-create}" th:object="${newUser}" method="post" class="row g-3">
-                <div class="col-md-3">
-                    <input type="text" th:field="*{username}" class="form-control" placeholder="Username" required>
-                </div>
-                <div class="col-md-3">
-                    <input type="email" th:field="*{email}" class="form-control" placeholder="Email" required>
-                </div>
-                <div class="col-md-3">
-                    <input type="password" th:field="*{password}" class="form-control" placeholder="Пароль" required>
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-gradient w-100">
-                        <i class="bi bi-plus-circle"></i> Создать
-                    </button>
-                </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <span class="navbar-brand">Admin Panel</span>
+        <div class="d-flex">
+            <!-- Logout через POST -->
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-outline-danger">Logout</button>
             </form>
         </div>
     </div>
+</nav>
 
-    <!-- Таблица пользователей -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-list"></i> Список пользователей</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Имя пользователя</th>
-                        <th>Email</th>
-                        <th>Роли</th>
-                        <th>Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="user : ${users}">
-                        <td th:text="${user.id}"></td>
-                        <td th:text="${user.username}"></td>
-                        <td th:text="${user.email}"></td>
-                        <td>
-                            <span th:each="role : ${user.roles}"
-                                  class="badge me-1"
-                                  th:class="${role.name == 'ROLE_ADMIN'} ? 'bg-danger' : 'bg-primary'"
-                                  th:text="${role.name.replace('ROLE_', '')}">
-                            </span>
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a th:href="@{/admin/edit/{id}(id=${user.id})}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-pencil"></i> Изменить
-                                </a>
-                                <a th:href="@{/admin/user/{id}(id=${user.id})}" class="btn btn-outline-info btn-sm">
-                                    <i class="bi bi-eye"></i> Обзор
-                                </a>
-                                <form th:action="@{/admin/delete/{id}(id=${user.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm"
-                                            onclick="return confirm('Вы уверены, что хотите удалить данного пользователя?')">
-                                        <i class="bi bi-trash"></i> Удалить
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+<div class="container mt-5">
+    <h2 id="welcomeText">Добро пожаловать, Админ!</h2>
+    <p>Эта страница доступна только для пользователей с ролью ADMIN.</p>
+
+    <div class="my-4">
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">Add New User</button>
+
+        <table class="table table-striped" id="usersTable">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Age</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content p-3">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="firstName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="lastName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-control" id="age" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="role" required>
+                            <option value="USER">USER</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success">Add New User</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="mt-3">
-        <form th:action="@{/logout}" method="post" class="d-inline">
-            <button type="submit" class="btn btn-outline-danger">
-                <i class="bi bi-box-arrow-right"></i> Выход
-            </button>
-        </form>
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content p-3">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId" />
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="editFirstName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="editLastName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-control" id="editAge" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="editRole" required>
+                            <option value="USER">USER</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Edit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const usersTableBody = document.getElementById('usersTable').getElementsByTagName('tbody')[0];
+    let users = JSON.parse(localStorage.getItem('users')) || [
+        {id: 1, firstName: 'Admin', lastName: 'Adminov', age: 30, email: 'admin@example.com', role: 'ADMIN'}
+    ];
+
+    function renderUsers() {
+        usersTableBody.innerHTML = '';
+        users.forEach(user => {
+            const row = usersTableBody.insertRow();
+            row.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.firstName}</td>
+                <td>${user.lastName || '-'}</td>
+                <td>${user.age || '-'}</td>
+                <td>${user.email}</td>
+                <td>${user.role}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm editBtn">Edit</button>
+                    <button class="btn btn-danger btn-sm deleteBtn">Delete</button>
+                </td>
+            `;
+        });
+    }
+
+    renderUsers();
+
+    // Add User
+    document.getElementById('addUserForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const newUser = {
+            id: users.length ? Math.max(...users.map(u => u.id)) + 1 : 1,
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            age: document.getElementById('age').value,
+            email: document.getElementById('email').value,
+            role: document.getElementById('role').value
+        };
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+        renderUsers();
+        bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+        document.getElementById('addUserForm').reset();
+    });
+
+    // Edit & Delete
+    document.addEventListener('click', function(e){
+        const row = e.target.closest('tr');
+        if(e.target.classList.contains('editBtn')){
+            const userId = parseInt(row.cells[0].innerText);
+            const user = users.find(u => u.id === userId);
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editFirstName').value = user.firstName;
+            document.getElementById('editLastName').value = user.lastName;
+            document.getElementById('editAge').value = user.age;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editRole').value = user.role;
+            new bootstrap.Modal(document.getElementById('editUserModal')).show();
+        }
+        if(e.target.classList.contains('deleteBtn')){
+            const userId = parseInt(row.cells[0].innerText);
+            users = users.filter(u => u.id !== userId);
+            localStorage.setItem('users', JSON.stringify(users));
+            renderUsers();
+        }
+    });
+
+    document.getElementById('editUserForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const userId = parseInt(document.getElementById('editUserId').value);
+        const user = users.find(u => u.id === userId);
+        user.firstName = document.getElementById('editFirstName').value;
+        user.lastName = document.getElementById('editLastName').value;
+        user.age = document.getElementById('editAge').value;
+        user.email = document.getElementById('editEmail').value;
+        user.role = document.getElementById('editRole').value;
+        localStorage.setItem('users', JSON.stringify(users));
+        renderUsers();
+        bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+    });
+</script>
 </body>
 </html>
