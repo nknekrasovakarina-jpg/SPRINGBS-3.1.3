@@ -44,6 +44,10 @@ public class User implements UserDetails {
         this.password = password;
         this.email = email;
     }
+    private int age;
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

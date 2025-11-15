@@ -5,10 +5,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import ru.kata.spring.boot_security.demo.MODEL.Role;
 import ru.kata.spring.boot_security.demo.MODEL.User;
 import ru.kata.spring.boot_security.demo.SERVICE.UserService;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -22,85 +25,60 @@ public class AdminController {
     }
 
     @GetMapping
-    public String adminPage(Model model,
-                            @RequestParam(value = "success", required = false) String success,
-                            @RequestParam(value = "error", required = false) String error) {
-        List<User> users = userService.getAllUsers();
-        model.addAttribute("users", users);
-        model.addAttribute("allRoles", userService.getAllRoles());
-        model.addAttribute("newUser", new User()); // Для формы создания
-
-        if (success != null) {
-            model.addAttribute("successMessage", success);
-        }
-        if (error != null) {
-            model.addAttribute("errorMessage", error);
-        }
-
+    public String adminPage(Model model) {
+        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("roles", userService.getAllRoles());  // <-- вот ЭТО
+        model.addAttribute("newUser", new User());
         return "admin";
-    }
-
-    @GetMapping("/user/{id}")
-    public String getUser(@PathVariable Long id, Model model) {
-        User user = userService.getUserById(id);
-        model.addAttribute("user", user);
-        return "user-details";
     }
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
+        model.addAttribute("roles", userService.getAllRoles());
         model.addAttribute("user", new User());
-        model.addAttribute("allRoles", userService.getAllRoles());
-        return "user-create.html";
+        return "user-create";
     }
 
     @PostMapping("/create")
-    public String createUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
-        try {
-            if (userService.existsByUsername(user.getUsername())) {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        "User with username '" + user.getUsername() + "' already exists");
-                return "redirect:/admin/create";
-            }
+    public String createUser(@ModelAttribute User user,
+                             @RequestParam(required = false, value = "roleIds") List<Long> roleIds,
+                             RedirectAttributes redirectAttributes) {
 
-            if (userService.existsByEmail(user.getEmail())) {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        "User with email '" + user.getEmail() + "' already exists");
-                return "redirect:/admin/create";
-            }
+        try {
+            Set<Role> roles = roleIds == null
+                    ? Set.of(userService.findRoleByName("ROLE_USER").orElseThrow())
+                    : roleIds.stream()
+                    .map(id -> userService.getAllRoles().stream()
+                            .filter(r -> r.getId().equals(id))
+                            .findFirst().orElseThrow())
+                    .collect(Collectors.toSet());
+
+            user.setRoles(roles);
 
             userService.saveUser(user);
-            redirectAttributes.addAttribute("success", "User created successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "User created successfully!");
         } catch (Exception e) {
-            redirectAttributes.addAttribute("error", "Error creating user: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + e.getMessage());
         }
+
         return "redirect:/admin";
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Long id, Model model,
-                               @RequestParam(value = "success", required = false) String success,
-                               @RequestParam(value = "error", required = false) String error) {
-        User user = userService.getUserById(id);
-        model.addAttribute("user", user);
-        model.addAttribute("allRoles", userService.getAllRoles());
-
-        if (success != null) {
-            model.addAttribute("successMessage", success);
-        }
-        if (error != null) {
-            model.addAttribute("errorMessage", error);
-        }
-
+    public String editUserPage(@PathVariable Long id, Model model) {
+        model.addAttribute("user", userService.getUserById(id));
+        model.addAttribute("roles", userService.getAllRoles());
         return "user-update";
     }
 
     @PostMapping("/update/{id}")
     public String updateUser(@PathVariable Long id,
                              @ModelAttribute User user,
+                             @RequestParam(value = "roleIds", required = false) List<Long> roleIds,
                              RedirectAttributes redirectAttributes) {
         try {
             User existingUser = userService.getUserById(id);
+
             if (!existingUser.getUsername().equals(user.getUsername()) &&
                     userService.existsByUsername(user.getUsername())) {
                 redirectAttributes.addFlashAttribute("errorMessage",
@@ -115,45 +93,39 @@ public class AdminController {
                 return "redirect:/admin/edit/" + id;
             }
 
+            // роли
+            Set<Role> roles = (roleIds != null) ? roleIds.stream()
+                    .map(rid -> userService.getAllRoles().stream()
+                            .filter(r -> r.getId().equals(rid))
+                            .findFirst()
+                            .orElseThrow())
+                    .collect(Collectors.toSet())
+                    : existingUser.getRoles();
+
+            user.setRoles(roles);
+
             userService.updateUser(id, user);
+
             redirectAttributes.addAttribute("success", "User updated successfully!");
+
         } catch (Exception e) {
             redirectAttributes.addAttribute("error", "Error updating user: " + e.getMessage());
         }
+
         return "redirect:/admin/edit/" + id;
     }
 
-    @PostMapping("/delete/{id}")
-    public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            userService.deleteUser(id);
-            redirectAttributes.addAttribute("success", "User deleted successfully!");
-        } catch (Exception e) {
-            redirectAttributes.addAttribute("error", "Error deleting user: " + e.getMessage());
-        }
-        return "redirect:/admin";
+    @GetMapping("/delete/{id}")
+    public String showDeletePage(@PathVariable Long id, Model model) {
+        model.addAttribute("user", userService.getUserById(id));
+        return "user-delete";
     }
 
-    @PostMapping("/quick-create")
-    public String quickCreateUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
-        try {
-            if (userService.existsByUsername(user.getUsername())) {
-                redirectAttributes.addAttribute("error",
-                        "User with username '" + user.getUsername() + "' already exists");
-                return "redirect:/admin";
-            }
-
-            if (userService.existsByEmail(user.getEmail())) {
-                redirectAttributes.addAttribute("error",
-                        "User with email '" + user.getEmail() + "' already exists");
-                return "redirect:/admin";
-            }
-
-            userService.saveUser(user);
-            redirectAttributes.addAttribute("success", "User created successfully!");
-        } catch (Exception e) {
-            redirectAttributes.addAttribute("error", "Error creating user: " + e.getMessage());
-        }
+    @PostMapping("/delete/{id}")
+    public String deleteUser(@PathVariable Long id,
+                             RedirectAttributes redirectAttributes) {
+        userService.deleteUser(id);
+        redirectAttributes.addFlashAttribute("successMessage", "User deleted successfully!");
         return "redirect:/admin";
     }
 }

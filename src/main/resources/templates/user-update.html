@@ -1,96 +1,77 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Изменить пользователя</title>
+    <meta charset="UTF-8">
+    <title>Edit user</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        .btn-gradient {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            color: white;
-        }
-        .btn-gradient:hover {
-            background: linear-gradient(45deg, #5a67d8, #6b46c1);
-            color: white;
-        }
-    </style>
-    <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
-<body>
-<div class="container-fluid mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1><i class="bi bi-pencil-square"></i> Изменить пользователя</h1>
-                <a th:href="@{/admin}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Вернуться
-                </a>
-            </div>
 
-            <!-- Messages -->
-            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
-                <i class="bi bi-check-circle"></i>
-                <span th:text="${successMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
-                <i class="bi bi-exclamation-circle"></i>
-                <span th:text="${errorMessage}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+<body class="bg-light">
 
-            <!-- Edit Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Изменить данные пользователя</h5>
-                </div>
-                <div class="card-body">
-                    <form th:action="@{/admin/update/{id}(id=${user.id})}" th:object="${user}" method="post">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Имя пользователя *</label>
-                                <input type="text" th:field="*{username}" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email *</label>
-                                <input type="email" th:field="*{email}" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Пароль</label>
-                                <input type="password" th:field="*{password}" class="form-control" placeholder="Leave empty to keep current">
-                                <div class="form-text">Оставьте пустыми для сохранения текущего пароля</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Роли*</label>
-                                <select th:field="*{roles}" class="form-select" multiple size="4" required>
-                                    <option th:each="role : ${allRoles}"
-                                            th:value="${role.id}"
-                                            th:text="${role.name.replace('ROLE_', '')}"
-                                            th:selected="${user.roles.contains(role)}">
-                                    </option>
-                                </select>
-                                <div class="form-text">Удерживайте CTRL Для выбора нескольких ролей</div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-gradient">
-                                        <i class="bi bi-check-circle"></i> Обновить
-                                    </button>
-                                    <a th:href="@{/admin}" class="btn btn-outline-secondary">
-                                        <i class="bi bi-x-circle"></i> Отмена
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+<div class="container mt-5" style="max-width: 600px">
+
+    <h3 class="text-center mb-4">Edit user</h3>
+
+    <!-- Success -->
+    <div th:if="${successMessage}" class="alert alert-success text-center">
+        <span th:text="${successMessage}"></span>
     </div>
+
+    <!-- Error -->
+    <div th:if="${errorMessage}" class="alert alert-danger text-center">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+
+    <!-- ⚠⚠⚠   ВАЖНО: ПРАВИЛЬНЫЙ ACTION   ⚠⚠⚠ -->
+    <form th:action="@{/admin/update/{id}(id=${user.id})}" method="post" class="border p-4 bg-white rounded">
+
+        <!-- ⚠⚠⚠   ОБЯЗАТЕЛЬНО ПЕРЕДАТЬ ID   ⚠⚠⚠ -->
+        <input type="hidden" name="id" th:value="${user.id}">
+
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+
+        <div class="mb-3">
+            <label>ID</label>
+            <input class="form-control" th:value="${user.id}" disabled>
+        </div>
+
+        <div class="mb-3">
+            <label>Username</label>
+            <input name="username" class="form-control" th:value="${user.username}" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Email</label>
+            <input name="email" class="form-control" th:value="${user.email}" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Age</label>
+            <input name="age" class="form-control" th:value="${user.age}">
+        </div>
+
+        <div class="mb-3">
+            <label>Password</label>
+            <input name="password" type="password" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label>Roles</label>
+            <select name="roleIds" class="form-select" multiple>
+                <option th:each="r : ${roles}"
+                        th:value="${r.id}"
+                        th:text="${r.name}"
+                        th:selected="${user.roles.contains(r)}"></option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary w-100">Save</button>
+        <a href="/admin" class="btn btn-secondary w-100 mt-2">Back</a>
+
+    </form>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
