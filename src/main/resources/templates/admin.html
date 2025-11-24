@@ -81,11 +81,15 @@
                     </td>
 
                     <td>
+                        <!-- ✅ ПРАВКА: никаких u.firstName/u.lastName -->
                         <button class="btn btn-danger btn-sm"
                                 data-bs-toggle="modal"
                                 data-bs-target="#deleteModal"
                                 th:attr="data-id=${u.id},
-                                         data-username=${u.username}">
+                                         data-username=${u.username},
+                                         data-age=${u.age},
+                                         data-email=${u.email},
+                                         data-roles=${u.roles}">
                             Delete
                         </button>
                     </td>
@@ -193,8 +197,9 @@
 
 
 <!-- ======================== DELETE MODAL ======================== -->
-<div class="modal fade" id="deleteModal">
-    <div class="modal-dialog">
+<!-- ✅ вид как на скрине, но без несуществующих полей модели -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
             <form id="deleteForm">
@@ -207,7 +212,40 @@
                 </div>
 
                 <div class="modal-body">
-                    <p>Delete user: <b id="delete-username"></b>?</p>
+                    <div class="mx-auto" style="max-width: 320px;">
+
+                        <div class="mb-3 text-center">
+                            <label class="form-label fw-bold">ID</label>
+                            <input type="text" class="form-control bg-light" id="delete-id-view" readonly>
+                        </div>
+
+                        <div class="mb-3 text-center">
+                            <label class="form-label fw-bold">First name</label>
+                            <input type="text" class="form-control bg-light" id="delete-firstName" readonly>
+                        </div>
+
+                        <div class="mb-3 text-center">
+                            <label class="form-label fw-bold">Last name</label>
+                            <!-- так как lastName у тебя нет - просто покажем username -->
+                            <input type="text" class="form-control bg-light" id="delete-lastName" readonly>
+                        </div>
+
+                        <div class="mb-3 text-center">
+                            <label class="form-label fw-bold">Age</label>
+                            <input type="text" class="form-control bg-light" id="delete-age" readonly>
+                        </div>
+
+                        <div class="mb-3 text-center">
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="text" class="form-control bg-light" id="delete-email" readonly>
+                        </div>
+
+                        <div class="mb-3 text-center">
+                            <label class="form-label fw-bold">Role</label>
+                            <select multiple class="form-select bg-light" id="delete-roles" disabled></select>
+                        </div>
+
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -241,11 +279,38 @@
     deleteModal.addEventListener("show.bs.modal", event => {
         const button = event.relatedTarget;
 
-        let id = button.getAttribute("data-id");
-        let username = button.getAttribute("data-username");
+        const id = button.getAttribute("data-id");
+        const username = button.getAttribute("data-username");
+        const age = button.getAttribute("data-age");
+        const email = button.getAttribute("data-email");
+        const rolesRaw = button.getAttribute("data-roles") || "";
 
         document.getElementById("delete-id").value = id;
-        document.getElementById("delete-username").innerText = username;
+
+        document.getElementById("delete-id-view").value = id;
+
+        // ✅ у тебя нет first/lastName → кладём username, чтоб не пусто
+        document.getElementById("delete-firstName").value = username;
+        document.getElementById("delete-lastName").value = username;
+
+        document.getElementById("delete-age").value = age;
+        document.getElementById("delete-email").value = email;
+
+        const rolesSelect = document.getElementById("delete-roles");
+        rolesSelect.innerHTML = "";
+
+        rolesRaw
+            .replace("[", "")
+            .replace("]", "")
+            .split(",")
+            .map(r => r.trim())
+            .filter(r => r.length)
+            .forEach(r => {
+                const opt = document.createElement("option");
+                opt.textContent = r;
+                opt.selected = true;
+                rolesSelect.appendChild(opt);
+            });
     });
 
     // ======================== AJAX ADD USER ========================
